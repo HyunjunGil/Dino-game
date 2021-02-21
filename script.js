@@ -7,10 +7,12 @@ class ScoreInfo {
 }
 
 const character = document.getElementById('character');
-const block = document.getElementById('block');
+const game = document.getElementById('game');
+const ghost = document.getElementById('ghostBlock');
 const start = document.getElementById('startButton');
 const blockWidth = [20, 30, 40, 50, 60];
 const blockHeight = [20, 30, 40];
+const block_y = [0, 30, 60];
 var counter = 0;
 var onGame = false;
 var rankers = new Map();
@@ -60,20 +62,46 @@ function startGame () {
   if (onGame) return;
   onGame = true;
   const createRandomBlock = setInterval(() => {
-    let w = blockWidth[Math.floor(Math.random() * 5)];
-    let h = blockHeight[Math.floor(Math.random() * 3)];
-    block.style.width = w + 'px';
-    block.style.height = h + 'px';
-    block.style.top = (150 - h) + 'px';
-    block.style.animation = 'block 1s infinite linear';
-  }, 1000);
+    var delay = Math.floor(Math.random() * 200);
+    setTimeout(() => {
+      var newBlock = document.createElement('div');
+      newBlock.className = 'block';
+      let w = blockWidth[Math.floor(Math.random() * 5)];
+      let y = block_y[Math.floor(Math.random() * 3)];
+      let h = (y === 0) ? blockHeight[Math.floor(Math.random() * 3)] : 20; 
+      newBlock.style.width = w + 'px';
+      newBlock.style.height = h + 'px';
+      newBlock.style.top = (200 - h - y) + 'px';
+      newBlock.style.animation = 'block 1s linear';
+      game.insertBefore(newBlock, ghost);
+      setTimeout(() => {
+        newBlock.remove();
+      }, 1000);
+    }, delay);
+  }, 800);
   const checkDead = setInterval(() => {
+    var flag = true;
     const characterTop = parseInt(window.getComputedStyle(character).getPropertyValue("top"));
-    const blockLeft = parseInt(window.getComputedStyle(block).getPropertyValue("left"));
-    const w = parseInt(window.getComputedStyle(block).getPropertyValue("width"));
-    const h = parseInt(window.getComputedStyle(block).getPropertyValue("height"));
-    if ((characterTop >= 150 - h) && blockLeft > -w && blockLeft <= 20) {
-      block.style.animation = 'none';
+    const blocks = document.getElementsByClassName('block');
+    //console.log(blocks);
+    for(let i = 0; i < blocks.length; i++) {
+      let blockLeft = parseInt(window.getComputedStyle(blocks[i]).getPropertyValue("left"));
+      let blockTop = parseInt(window.getComputedStyle(blocks[i]).getPropertyValue("top"));
+      let w = parseInt(window.getComputedStyle(blocks[i]).getPropertyValue("width"));
+      let h = parseInt(window.getComputedStyle(blocks[i]).getPropertyValue("height"));
+      // console.log(characterTop, blockLeft, blockTop, w, h);
+      if (!(characterTop + 50 <= blockTop || characterTop >= blockTop + h) && blockLeft > -w && blockLeft <= 20) {
+        flag = false;
+        break;
+      }
+    }
+    if (flag) {
+      counter++;
+      document.getElementById('scoreSpan').innerHTML = Math.floor(counter/100);
+    } else {
+      for(i = 0;i < blocks.length; i++) {
+        blocks[i].remove();
+      }
       score = Math.floor(counter/100);
       alert('Game Over. Score: ' + score);
       updateHighscore(score);
@@ -82,9 +110,6 @@ function startGame () {
       document.getElementById('scoreSpan').innerHTML = 0;
       clearInterval(createRandomBlock);
       clearInterval(checkDead);
-    } else {
-      counter++;
-      document.getElementById('scoreSpan').innerHTML = Math.floor(counter/100);
     }
   }, 10);
 }

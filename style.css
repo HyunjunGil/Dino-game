@@ -25,13 +25,9 @@ html, body {
   top: 150px;
 }
 
-#block {
-  position: relative;
-  width: 20px;
-  height: 20px;
+.block {
+  position: absolute;
   background-color: blue;
-  top: 130px;
-  left: 500px; 
 }
 
 @keyframes block {
